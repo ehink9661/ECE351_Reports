@@ -1,0 +1,317 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 2                                                        %
+% January 25th, 2022                                           %
+% This lab is meant to teach us about user defined functions   %
+% in python and use pythons plotting tools to show how time    %
+% scaling affects these functions visually on the plots.       %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 2}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ The purpose of this lab was to introduce us to using user defined functions in Python and how they can be used to display signal operations graphically for us. This lab has us make user defined functions to solve several tasks to see how several different signal operations are executed in Python using plots.
+
+\section{Equations}
+Function for figure 2 found in part 2 task 1.\\
+\begin{equation}
+Figure 2: y(t) = 1r(t) - 1r(t-3) + 5u(t-3) - 2u(t-6) - 2r(t-6)
+\end{equation}
+
+
+\section{Methodology}
+\ \ \ \ I went about solving this lab sequentially. At first I copied the example code over to have a template to work off of for the rest of the functions. Once this code was working I began to use them as a template for all the other functions. I then moved on to create the functions using the high resolution code and modifying them to produce the cos, step function and ramp function. The last two functions were built by viewing the derivation of the two functions from the book. With help form the TA, I got the equation used in figure 2 and built another function to implement this design to simplify tests. I then ran through the tasks, modifying the plot to preform signal operations like time shifting, time scaling, time reversal, signal addition, and discrete differentiation. For the differentiation, I drew what I thought the plot would look like before preforming the plot, as the plot would not be accurate to the true differentiation of figure 2.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (0).png}
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+steps = 0.01
+xmin = -5.0
+xmax = 10.0
+t = np.arange(xmin, xmax + steps , steps)
+
+def func1(t):
+    y = np.zeros(t.shape)
+    for i in range(len(t)):
+        y[i] = np.cos(t[i])
+    return y
+y = func1(t)
+
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('cos(t) Function')
+plt.ylabel('cos(t) Function')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+The user defined function func1 creates a cosine plot using the cosine function provided by numpy and fills an array of y values to create a plot. the function plt.plot(t, y) gets the x and y values of the plot, adding things to the plot with the functions below before displaying the plot on the default window. By default, the cosine function has amplitude 1, but multiplying func1(t) by 2 will make it amplitude 2, and 0.5 for 0.5.
+
+Here, the imports are for all code, but only included here for simplicity. The step size, xmin, and xmax values are used in most functions, being edited as needed by the functions.
+
+
+\subsection{Part 2}
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (1).png}
+
+\begin{lstlisting}[language=Python]
+# Part 2
+
+# Task 2
+t = np.arange(xmin, xmax + steps , steps)
+
+def ramp(t):
+    y = np.zeros(t.shape)
+    for i in range(len(t)):
+        if t[i] < 0:
+            y[i] = 0
+        else:
+            y[i] = t[i]
+    return y
+
+y = ramp(t)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('ramp(t) Function')
+plt.ylabel('ramp(t)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+For the ramp function, the function takes the derivation of the ramp function and puts it in code form, being 0 for t < 0 and t for all other values so will be centered at 0. It uses the initial xmin, xmax, and step values from before to create its x values.
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (2).png}
+
+\begin{lstlisting}[language=Python]
+def step(t):
+    y = np.zeros(t.shape)
+    for i in range(len(t)):
+        if t[i] < 0:
+            y[i] = 0
+        else:
+            y[i] = 1
+    return y
+
+y = step(t)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('step(t) Function')
+plt.ylabel('step(t)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+For the step function, the function takes the derivation of the step function and puts it in code form, being 0 for t < 0 and 1 for all other values so will be centered at 0. Since the step function has an infinite slope, this is an unfaithful recreation, and relies on a high resolution to appear to behave properly. This function also reuses the t from earlier, as no changes occurred.
+
+\subsubsection{Task 3}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (3).png}
+
+\begin{lstlisting}[language=Python]
+# Task 3
+def f(t):
+    y = 1*ramp(t) - 1*ramp(t-3) + 5*step(t-3) - 2*step(t-6) - 2*ramp(t-6)
+    return y
+
+t = np.arange(xmin, xmax + steps , steps)
+y = f(t)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Figure 2')
+plt.ylabel('y(t)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+The user defined function f has arguments t and uses the step and ramp functions from Task 2 to create figure 2 on an Anaconda plots. This plot utilizes the equation we found to manipulate the position of the ramp and step functions to create our plot.
+
+\subsection{Part 3}
+
+\subsubsection{Task 1}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (4).png}
+
+\begin{lstlisting}[language=Python]
+t = np.arange(xmin - 5.0, xmax - 5.0 + steps, steps)
+y = f(-t)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Timescale of y(-t)')
+plt.ylabel('f(-t)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+Inverting the timescale flips the function (for here figure 2) over x = 0 on the plot. Here, the xmin is now -10 and the xmax is now 5, which have been corrected for t to see the changes.
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (5).png}
+
+\begin{lstlisting}[language=Python]
+# Task 2
+t = np.arange(xmin + 4.0, xmax + 4.0 + steps, steps)
+y = f(t-4)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Timescale of y(t-4)')
+plt.ylabel('y(t-4)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+Subtracting from the timescale shifts the function however much you subtracted by to the right. The graph bounds have been adjusted to fit the plot, but the xmin/xmax have been shifted right on 4, as we plugged in t-4 to the function f(t).
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (6).png}
+
+\begin{lstlisting}[language=Python]
+t = np.arange(xmin - 9.0, xmax - 9.0 + steps, steps)
+y = f(-t-4)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Timescale of y(-t-4)')
+plt.ylabel('y(-t-4)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+Subtracting from the timescale as well as inverting it will do the behaviors simultaneously. First, the function recreates the plot from the simple time shift, then inverts the timescale so the max is now 1 and min is now -14.
+
+\subsubsection{Task 3}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (7).png}
+
+\begin{lstlisting}[language=Python]
+t = np.arange(2*xmin, 2*xmax + steps, steps)
+y = f(t/2)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Timescale of y(0.5t)')
+plt.ylabel('y(t/2)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+When we have a timescale of 0.5, the plot widens by a factor of 2. When multiplying t by 0.5, the x factor will double and make the plot wider by a factor of the inverse of whatever it is multiplied by.
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (8).png}
+
+\begin{lstlisting}[language=Python]
+t = np.arange(xmin/2, xmax/2 + steps, steps)
+y = f(2*t)
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Timescale of y(2t)')
+plt.ylabel('y(2*t)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+This plot is the inverse of the previous plot. When we have a timescale of 2, the plot shrinks by a factor of 2. When multiplying t by 2, the x factor will half and make the plot skinnier by a factor of the inverse of whatever it is multiplied by.
+
+\subsubsection{Task 4}
+
+\includegraphics[scale=1]{drawnDiff.PNG}
+
+The drawn derivative plot follows how the step and ramp function should actually look, with immediate jumps at slope changes to their new values. Since it is impossible to visualize the indefinite slope of the step functions, they are shown as dotted undefined lines on the chart.
+
+\subsubsection{Task 5}
+
+\includegraphics[scale=0.7]{Figure 2022-01-26 120419 (9).png}
+
+\begin{lstlisting}[language=Python]
+steps = 1.0 # derivative has 1 step size for easier visualization
+t = np.arange(xmin, xmax + steps, steps)
+y = np.diff(f(t-1))
+t = np.arange(xmin, xmax, steps) # shrinks t for derivative graph
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.grid()
+plt.title('Differentiation of y(t)')
+plt.ylabel('diff(y(t-1))')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+For taking the derivation of the timescale, I reverted the steps to 1, which lowered the resolution but made implementation much easier to visualize and implement. For diff, t had to be shifted over by 1 to get the desired effect. The diff also returned back one less value than t, so the x axis had one of its values removed to facilitate that, so the values were one to one. Compared to the drawn graph, the inclusion of the slope makes the plot unreliable, but a good visual marker for how the function should behave, as all the horizontal parts signify correctly the sloe of their specified areas.
+
+\section{Error Analysis}
+\ \ \ \ For this lab, the biggest troubles and errors that I had were related to dealing with python. I usually code in C or similar languages, so switching my mind to be thinking about it in python was difficult. When I was making the step and ramp functions, I kept worrying about how they would know what part of the y array to insert into and kept adding checks. Eventually, when I asked the TA is this was correct she informed me of how python operates and a better way to do what I was trying to do. She also gave a nice rundown on how to create the equation for figure 2, as we had not gone over that in great detail in class which helped it along. The diff plot was the hardest to create, but once I understood how it was affecting the plot it was much easier to implement and solve for the correct function formatting.
+
+\section{Questions}
+1. Are the plots from Part 3 Task 4 and Part 3 Task 5 identical? Is it possible for them to match? Explain why or why not.
+\\
+The plots for task 4 and 5 are not identical. It is impossible to get them to ever perfectly match as the change in the slope of figure 2 is an immediate jump (0 to 1) so would have an infinite slope, making plotting it impossible using python plots. We also have a slope of infinity, which is impossible to visualize on a plot and must be visualized in some other way.
+\\
+2. How does the correlation between the two plots (from Part 3 Task 4 and Part 3 Task 5) change if you were to change the step size within the time variable in Task 5? Explain why this happens.
+\\
+The smaller the step size, the better resolution on the plot and the closer it will look to the plot found for task 4. This happens by a smaller time variable allowing the plot to reach its intended value closer to when it intended, so step 1 will have (1, 0 -> 2, 1) for a step while a step of 0.5 will have (1, 0 -> 1.5, 1 -> 2, 1) so the final value is reached faster, giving us a higher resolution. A smaller step increases the resolution of the plot, while a larger one lowers the resolution.
+\\
+3. Leave any feedback on the clarity of lab tasks, expectations, and deliverable.
+\\
+Before lab recommend that we bring our books/notes with us for making the functions. Adding the .diff to the numpy documentation would also help so that we do not need to look up how to do it off of a third party service.
+
+\section{Conclusion}
+\ \ \ \ For this lab, there were two main takeaways. The first one was how to create user defined function and plot them for visualization. The second takeaway was how the time scaling affects the visualization of our plots and our functions, such as shift left/right ect. I do wonder why we did not explore modifying the y axis (growing/shrinking) but that is more obvious than the x axis so can be forgiven. Visualizing the changes on the plots definitely helped me to understand how each time scaling function affects the function. It also helped me to understand how python arrays and plots work as opposed to more C behaviors with arrays that I am used too. Overall this lab was a nice easing in to using python as a language for this class.
+
+\end{document}
