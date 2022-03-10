@@ -1,0 +1,198 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 6                                                        %
+% February 22th, 2022                                          %
+% This lab deals with using python libraries to solve our      %
+% partial fraction expansions for us, lowering our work time   %
+% and learning a useful tool for more complex problems         %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 6}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ This lab focuses on using python libraries to perform partial fraction expansion
+
+\section{Equations}
+
+$$H(s)=\frac{Vout(s)}{Vin(s)} = \frac{s^2 + 6s + 12}{s^2 + 10s + 24}$$
+$$Y(s) = \frac{s^2 + 6s + 12}{s(s + 4)(s + 6)}$$
+$$y(t) = (\frac{1}{2} - \frac{1}{2}e^{-4t} + e^{-6t})u(t)$$
+
+\section{Methodology}
+\ \ \ \ For this lab I followed the lab handout closely. I did all the python plots before I did my hand calculated ones, as the python plots could be used to correct my hand calculations or signal that I inserted them into python wrong. I decided against defining my variables symbolically for these plots, as I had already calculated their values in the prelab and did not feel a need to over complicate my code. Once all my plots came out as equal I declared the lab a success and wrapped it up.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1 and 2}
+
+\includegraphics[scale=0.7]{Figure 2022-02-22 151341 (0).png}
+
+\begin{lstlisting}[language=Python]
+# Part 1
+
+# Task 1
+
+def y1(t):
+    y = (0.5 - 0.5*np.exp(-4*t)+ np.exp(-6*t))*step(t)
+    return y
+
+y = y1(t)
+plt.figure(figsize = (10, 7))
+plt.subplot (2,1,1)
+plt.plot(t, y)
+plt.grid()
+plt.title('Step Response')
+plt.ylabel('y(t) Hand Calculated')
+
+# Task 2
+
+den = [1, 10, 24]
+num = [1, 6, 12]
+tout, yout = scipy.signal.step((num, den), T = t)
+plt.subplot (2,1,2)
+plt.plot(tout, yout)
+plt.grid()
+plt.ylabel('y(t) scipy.signal.step')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+\ \ \ \ The plots for task 1 and 2 came out to be equal, showing that the hand calculated values as well as the python calculated values were equal.
+
+\subsubsection{Task 3}
+
+\begin{lstlisting}[language=Python]
+# Task 3
+
+rout, pout, kout = scipy.signal.residue([0, 1, 6, 12], [1, 10, 24, 0])
+print('part 1 task 3')
+print('r =', rout)
+print('p =', pout)
+print('k =', kout)
+
+part 1 task 3
+r = [ 0.5 -0.5  1. ]
+p = [ 0. -4. -6.]
+k = []
+\end{lstlisting}
+
+\ \ \ \ The signal.residue function worked perfectly, giving me the exact values I calculated for the expansion, shown at the bottom of the code with the expected values of A, B, C (r) as well as the denominators (p) of the fractions being correct.
+
+\subsection{Part 2}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+# Part 2
+
+# Task 1
+
+rout, pout, kout = scipy.signal.residue([0, 0, 0, 0, 0, 0, 25250], [1, 18, 218, 2036, 9085, 25250, 0])
+print('part 2 task 1')
+print('r =', rout)
+print('p =', pout)
+print('k =', kout)
+
+part 2 task 1
+r = [ 1.        +0.j         -0.48557692+0.72836538j -0.48557692-0.72836538j
+ -0.21461963+0.j          0.09288674-0.04765193j  0.09288674+0.04765193j]
+p = [  0. +0.j  -3. +4.j  -3. -4.j -10. +0.j  -1.+10.j  -1.-10.j]
+k = []
+\end{lstlisting}
+
+\ \ \ \ The output behaves like what I expected from this function, with p and p* being visible and any real roots r having no imaginary parts in p.
+
+\subsubsection{Task 2 and 3}
+
+\includegraphics[scale=0.7]{Figure 2022-02-22 151341 (1).png}
+
+\begin{lstlisting}[language=Python]
+# task 2
+
+steps = 0.01
+xmin = 0.00
+xmax = 4.50
+t = np.arange(xmin, xmax + steps , steps)
+
+def y2(t):
+    y = ((-0.21461963*np.exp(-10*t)) + (2*0.8754*np.exp(-3*t)*np.cos(4*t + math.radians(123.69))) + (2*0.1044*np.exp(-1*t)*np.cos(10*t + math.radians(-27.16))) + 1)*step(t)
+    return y
+
+y = y2(t)
+plt.figure(figsize = (10, 7))
+plt.subplot (2,1,1)
+plt.plot(t, y)
+plt.grid()
+plt.title('Time Domain Response')
+plt.ylabel('y(t) Based on scipy.signal.residue')
+
+# task 3
+
+den = [1, 18, 218, 2036, 9085, 25250]
+num = [ 0, 0, 0, 0, 0, 25250]
+tout, yout = scipy.signal.step((num, den), T = t)
+plt.subplot (2,1,2)
+plt.plot(tout, yout)
+plt.grid()
+plt.ylabel('y(t) scipy.signal.step')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+\ \ \ \ The plots for y(t) in the time domain came out to be equal, showing that the results gotten form residue are indeed valid for constructing a time domain step response function, as it is equal to the signal.step function sued in previous labs.
+
+\section{Error Analysis}
+\ \ \ \ My error analysis for this lab consisted of using python to check my hand calculations, while doing the opposite if they seemed off. My prelab was actually off for the amplitude of the functions, so I was able to see that they did not match up and analyze my calculations for the error. Once our TA showed us what we should expect from the prelab this checking became easier, as I now had a valid benchmark to go off of.
+
+\section{Questions}
+1. For a non-complex pole-residue term, you can still use the cosine method, explain why this works.\\
+As we are not complex, the imaginary part of p will be 0. This removes the t in the cosine function and make the angle of the cosine function 0, giving 1. The exponential and constant part of the function can be solved as normal.\\
+2. Leave any feedback on the clarity of lab tasks, expectations, and deliverable.\\
+I have no feedback for this lab> I found it straightforward and easy to do if I followed the handout.
+
+\section{Conclusion}
+\ \ \ \ This lab was a straightforward analysis of using Python libraries to solve partial fractions and analyze Laplace transforms using plots. Being able to check the new code against our hand calculations as well as the previously proven python functions was nice for working my head around how they work for checking and solving equations. Overall this lab was a straightforward learning experience.
+
+\end{document}

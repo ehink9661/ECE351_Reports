@@ -1,0 +1,137 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 5                                                        %
+% February 15th, 2022                                          %
+% This lab deals with laplace transformations and the impulse  %
+% response and step inputs of those functions                  %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 5}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ This lab deals with using Laplace transforms to find the time-domain response of an RLC band-pass filter and use this response to find the impulse and step inputs.
+
+\section{Equations}
+
+$$H(s)=\frac{Vout(s)}{Vin(s)} = \frac{\frac{1}{R}}{\frac{1}{R} + sC + \frac{1}{sL}} = \frac{\frac{1}{RC}s}{s^{2}+\frac{1}{RC}s + \frac{1}{LC}}$$
+
+$$h(t) = y_{s}(t)=10356e^{-5000t}sin(18585t+105^{\circ})u(t)$$
+
+\section{Methodology}
+\ \ \ \ The first thing I did for this lab was complete the pre lab, which I did by converting the circuit into the s-domain and solving for the voltage gain equation. I then solved for the impulse function using the sine method. Once I had completed the pre lab, I went into lab and coded the two plots, checking and adjusting my math as needed to make sure they matched. Once they did I could move on to figuring out the step response plot and figured out the limit of the functions using the final value theorem, comparing it to what I had found previously to make sure it made sense. Once all this was correct and justified I answered the questions and completed the lab.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1 and 2}
+
+\includegraphics[scale=0.7]{Figure 2022-02-15 151833 (0).png}
+
+\begin{lstlisting}[language=Python]
+def h1(t):
+    y = 10356*np.exp(-5000*t)*(np.sin(18585*t+math.radians(105)))*step(t)
+    return y
+
+y1 = h1(t)
+plt.figure(figsize = (10, 7))
+plt.subplot (2,1,1)
+plt.plot(t, y1)
+plt.grid()
+plt.title('Inpulse Response')
+plt.ylabel('h(t) Hand Calculated')
+
+num = [0, 10000, 0]
+den = [1, 10000, 370370370]
+tout, yout = scipy.signal.impulse((num, den), T = t)
+plt.subplot (2,1,2)
+plt.plot(tout, yout)
+plt.grid()
+plt.ylabel('Using signal.impulse')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+\ \ \ \ The plots created using the hand calculations and the ones created using signal.impulse were found to be the same. 
+
+\subsection{Part 2}
+
+\subsubsection{Task 1}
+
+\includegraphics[scale=0.7]{Figure 2022-02-15 151833 (1).png}
+
+\begin{lstlisting}[language=Python]
+num = [0, 10000, 0]
+den = [1, 10000, 370370370]
+tout, yout = scipy.signal.step((num, den), T = t)
+plt.plot(tout, yout)
+plt.grid()
+plt.title('Step Response')
+plt.ylabel('Step response of H(s)')
+plt.xlabel('t in Seconds')
+plt.show()
+\end{lstlisting}
+
+\ \ \ \ The step response of h(t) appears to behave as we would expect it too. The function starts with a sharp increase until just before h(0.0001), where h(t) goes negative, resulting in the sharp decrease in the slope of the step response. This pattern continues the same through the rest of the plots, eventually settling at 0 when the original plot settles around 0.
+
+\subsubsection{Task 2}
+
+$$lim_{s->0}[s*H(s)*u(s)]$$
+$$lim_{s->0}[s*\frac{10000s}{s^2+10000s+370370370}*\frac{1}{s}] = \frac{10000s}{s^2+10000s+370370370} = 0$$
+
+\subsubsection{Task 3}
+\ \ \ \ The results of this limit do make sense. The plots found in part 1 are in the time domain, so when t approaches infinity we should get zero according to the final value theorem. When t is approaching infinity, the value seems to settle at zero, and when done in the s domain, at s = 0 the value is 0.
+
+\section{Error Analysis}
+\ \ \ \ When I was doing the lab, the biggest problem I had was getting the two plots in part 1. Originally, my hand calculated plot was shifted sightly to the left, so I had to figure out what was wrong with my plot. Eventually after rerunning my prelab math, I realised that I had wrote down the wrong final equation, and It was too small amplitude and too small of a shift. Once that was corrected, the plots came out as equal. The rest for the lab went smoothly.
+
+\section{Questions}
+1. Explain the result of the Final Value Theorem from Part 2 Task 2 in terms of the physical circuit components.\\
+As we approach s = 0 or t = infinity with the circuits, the voltage gain of the band pass filter will settle at 0 after an infinite amount of time has passed.\\
+2. Leave any feedback on the clarity of lab tasks, expectations, and deliverable.\\
+This lab was clear and straightforward, I have no suggestions.
+
+\section{Conclusion}
+\ \ \ \ This lab was a nice demonstration of using the python functions to calculate and plot the Laplace transformations of functions, rather than simply doing them all by hand. It was also a nice way to see how we can use python to check our work that needs to be done by hand for errors. Seeing how the step response was plotted in response to negative inputs and as you have a limit approaching 0 was also a nice learning experience for future reference to know how the behavior changed as the amplitude shrinks. Overall this lab was a nice, straightforward experience on how we can use python to solve for the impulse equation of filters and a nice refresher on how to solve for the s-domain characteristics of these filters.
+
+\end{document}

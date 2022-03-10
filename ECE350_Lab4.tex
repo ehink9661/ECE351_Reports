@@ -1,0 +1,132 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 4                                                        %
+% February 8th, 2022                                           %
+% This lab deals with using convolutions to calculate a        %
+% systems step response. The actual calculations for the hand  %
+% calculations are not included, but their solutions can be    %
+% found under part 2 task 2.                                   %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 4}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ This lab builds upon the convolution function built in lab 3, and uses it to view the results of the step function compared to the results of hand calculations run by the step function.
+
+\section{Equations}
+
+\begin{equation}
+h_1(t) = e^{-2*t}*(u(t)-u(t-3))
+\end{equation}
+\begin{equation}
+h_2(t) = u(t-2)-u(t-6)
+\end{equation}
+\begin{equation}
+h_3(t) = cos(w_0*t)*u(t) for f_0 = 0.25 Hz
+\end{equation}
+
+\section{Methodology}
+\ \ \ \ I started this lab by copying the lab 3 code for convolution and the three functions. I modified the function code to take the new functions, as well as solve for the frequency in radians. Once I plotted the functions and could see that they worked, I began on part 2. I found the step response for the three functions and plotted them as well, but some of them seemed off. When the TA showed what our expected values for the hand calculations were different than mine, we realised that the wrong equations were posted and once they were corrected coded the functions and plotted them as well for comparison.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+f = 0.25
+w = 2*math.pi*f
+
+# h1 function
+def h1(t):
+    y = np.exp(-2*t)*(step(t)-step(t-3))
+    return y
+
+# h2 function
+def h2(t):
+    y = step(t-2)-step(t-6)
+    return y
+
+# h3 function
+def h3(t):
+    y = (np.cos(w*t))*step(t)
+    return y
+\end{lstlisting}
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=0.7]{Figure 2022-02-11 151159 (0).png}
+
+\ \ \ \ All of the h(t) functions follow the expected behavior of the functions. 1 and 3 begin at 0 thanks to the step function while 2 begins 2 seconds later. 1 and 2 terminate 3 and 6 seconds later respectively while 3 continues indefinitely. They all behave appropriately, with 1 being exponential, 2 being a rectangular function, and 3 being sinusoidal.
+
+\subsection{Part 2}
+
+\subsubsection{Task 1}
+
+\includegraphics[scale=0.7]{Figure 2022-02-11 151159 (1).png}
+
+\ \ \ \ The step function convolutions make sense for each of the functions plotted earlier. The behavior of h1 mimics the behavior of the exponential functions plotted last lab, with a quick increase, a plateau, then a decline. H2 forms a rhombus, with a steady increase, a plateau, and a decrease. For h3, as it continues forever the pattern never ends, but is shifted left slightly so that the convolution begins at 0 instead of 1.
+
+\subsubsection{Task 2}
+
+$$y_1(t) = 0.5*((1-e^{-2*t})*u(t)-(1-e^{-2*(t-3)})*u(t-3))$$
+$$y_2(t) = (t-2)*u(t-2)-(t-6)*u(t-6)$$
+$$y_3(t) = 1/w_0*sin(w_0*t)*u(t)$$
+
+\includegraphics[scale=0.7]{Figure 2022-02-11 151159 (2).png}
+
+\ \ \ \ The hand calculations resulted in a bit different plots to the ones found through our functions. The cosine plot came out the same to the one plotted in python. The exponential plot came our shorter than the one found in the convolution function, but had the same behavior. This is due to the hand calculation reaching the documenting step function much earlier due to the way the math came out. H2 seemed to continue indefinitely, only plateauing when it reaches t = 6 and never dropping back down again, as we would expect from a step function. This is most likely due to the convolution function not taking into account the eventual decrease of the function.
+
+\section{Error Analysis}
+\ \ \ \ The two errors in these functions are between the two step function charts. These errors are most likely a result from the differences between the way the hand calculations and the convolution function deals with calculations at higher bounds, although I wonder why that is. I am more willing to trust the hand calculations as they came from the TA, so the python plots are at fault. They also said some variation was expected, so I am willing to go with it.
+
+\section{Questions}
+1. Leave any feedback on the clarity of lab tasks, expectations, and deliverable.
+\\ The lab handout says the plots should be the same, but you said that some variation was acceptable. Could help to have some clarification between the two.
+
+
+\section{Conclusion}
+\ \ \ \ This lab was a nice comparison for us between hand calculations and relying on the software to do all the work for us. Practicing with different convolutions to see their general behavior was a nice learning experience, and helped to reinforce common patterns we can expect in certain convolutions. The problems between the hand calculations and the python plots was annoying, but a useful example about why over reliance on one form can become a problem, and several approaches is sometimes best. Overall, this labs building upon previous labs and improving our understanding of convolutions is a useful tool for us in the future.
+
+\end{document}

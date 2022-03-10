@@ -1,0 +1,177 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 7                                                        %
+% March 1st, 2022                                              %
+% This lab deals with using python libraries to solve Laplace  %
+% transformation as well as partial fraction expansion to      %
+% determine the stability of systems                           %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 7}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ The goal of this lab was too become familiar with using Laplace-domain block diagrams and use use python functions and plots to find if they are stable or not.
+
+\section{Equations}
+
+$$G(s) = \frac{s+9}{(s^2-6s-16)(s+4)} = \frac{5}{24(s+4)} - \frac{7}{20(s+2)} + \frac{17}{120(s-8)}$$
+$$A(s) = \frac{s+4}{s^2+4s+3} = \frac{3}{2(x+1)} - \frac{1}{2(x+3)}$$
+$$B(s) = s^2+26s+168 = (s+12)(s+14)$$
+$$Open Loop$$
+$$Ht(s) = \frac{numA*numG}{denA*denG} = \frac{(s+4)(s+9)}{(s+1)(s+3)(s+4)(s+2)(s-8)}$$
+$$Closed Loop$$
+$$Ht(s) = \frac{numA/denA*numG/denG}{1+numG/denG*numB} = \frac{s^2+13s+36}{2s^5+41s^4+500s^3+2995s^2+6878s+4344}$$
+
+\section{Methodology}
+\ \ \ \ My methodology for this lab was to use python to check my work while I worked through the problems by hand by using the python functions to get a better gauge on what they represented. I decided not to do the python functions symbolically, as I have not had good luck with that in past labs, and my calculator is capable of solving the advanced equations. I only solved for the responses to the block diagram once I had gathered all other data I needed to solve them. I Accidentally ended up doing part 2 before doing part 1, so ended up doing this lab backwards, but came to the same result in the end with a bit more headache.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 2}
+
+\begin{lstlisting}[language=Python]
+zout, pout, kout = scipy.signal.tf2zpk([0, 0, 1, 9], [1, -2, -40, -64])
+print('part 1 task 2 G(s)')
+print('z =', zout)
+print('p =', pout)
+print('k =', kout)
+
+zout, pout, kout = scipy.signal.tf2zpk([0, 1, 4], [1, 4, 3])
+print('part 1 task 2 A(s)')
+print('z =', zout)
+print('p =', pout)
+print('k =', kout)
+
+zout = np.roots([1, 26, 168])
+print('part 1 task 2 B(s)')
+print('z =', zout)
+
+part 1 task 2 G(s)
+z = [-9.]
+p = [ 8. -4. -2.]
+k = 1.0
+part 1 task 2 A(s)
+z = [-4.]
+p = [-3. -1.]
+k = 1.0
+part 1 task 2 B(s)
+z = [-14. -12.]
+\end{lstlisting}
+
+\subsubsection{Task 4}
+
+\ \ \ \ Considering the expression I got for the open loop response, I do not think the open loop response is stable. The open loop response has a positive pole, making it so the function will never stabilize as time approaches infinity.
+
+\subsubsection{Task 5}
+
+\includegraphics[scale=0.7]{Figure 2022-03-01 151655 (0).png}
+
+\subsubsection{Task 6}
+
+\ \ \ \ My plot supports my claim that the plot is unstable, as time increases the plot continues to grow exponentially instead of settling at a stable point as t approaches infinity. Open loop responses are open more unstable the longer a system continues as it does not take into account other effects to the outputs.
+
+\subsection{Part 2}
+
+\subsubsection{Task 2}
+
+\begin{lstlisting}[language=Python]
+num = scipy.signal.convolve([1, 4], [1, 9])
+den = scipy.signal.convolve([1, 4, 3], [2, 33, 362, 1448])
+print('part 2 task 2')
+print('numerator', num)
+print('denominator', den)
+zout, pout, kout = scipy.signal.tf2zpk(num, den)
+print('z =', zout)
+print('p =', pout)
+print('k =', kout)
+
+numerator [ 1 13 36]
+denominator [   2   41  500 2995 6878 4344]
+z = [-9. -4.]
+p = [-5.16237064+9.51798197j -5.16237064-9.51798197j -6.17525872+0.j
+ -3.        +0.j         -1.        +0.j        ]
+k = 0.5
+\end{lstlisting}
+
+\subsubsection{Task 3}
+
+\ \ \ \ From my function found for the closed loop, I do believe the system to be stable. The function lacks a positive poll, so should stabilize as the system approaches infinity.
+
+\subsubsection{Task 4}
+
+\includegraphics[scale=0.7]{Figure 2022-03-01 151655 (1).png}
+
+\subsubsection{Task 5}
+
+\ \ \ \ The plot found does support my claim that the system will stabilize as time approaches infinity. As time increases, the plot slowly stabilizes around 0.008 over the ten second period. Unlike the open loop, which increased exponentially as  time increased, the closed loop settles, and if we were to take time at 100 would follow a similar pattern of stability.
+
+\section{Error Analysis}
+\ \ \ \ My biggest errors for this lab was calculating the closed and open loop responses. These responses did not come out to nice round numbers, so at first I thought that I had solved the laplace transforms wrong and did them again. When I continued to get unusual numbers, I asked the TA if they thought it was right and they confirmed that the highest power s were the same and to trust my math. Other students in the lab got the same values so I rolled with it.
+
+\section{Questions}
+1. In Part 1 Task 5, why does convolving the factored terms using scipy.signal.convolve() result in the expanded form of the numerator and denominator? Would this work with your user-defined convolution function from Lab 3? Why or why not?\\
+
+The scipy convolve function gives us the expanded form of the numerator and denominator because taking the convolution of two functions is the equivalent of multiplying the two functions together in the s domain, so the output of the convolve functions are the array representation of the expanded form. Our function from lab 3 would not work for fetching the numerator and denominator, as it operates in the time domain instead of the s domain.\\
+
+2. Discuss the difference between the open- and closed-loop systems from Part 1 and Part 2. How does stability differ for each case, and why?\\
+
+The open loop system is the shortest path from input to output, so function B is omitted from it. The closed loop system includes function B, as it includes all the blocks that impact the output. The open loop system grows more unstable as time goes on as it lacks Bs impact on the output si left out, leading to an unstable system. The closed loop does take into account Bs impact on the output, so ends up with a more stable output as time approaches infinity.\\
+
+3. What is the difference between scipy.signal.residue() used in Lab 6 and scipy.signal.tf2zpk() used in this lab?\\
+
+Both residue and tf2zpk calculate the poles of the inputs. Residue also calculates the residues of the poles, while the tf2zpk gives us the zeros of the inputs instead as well as the system gain.\\
+
+4. Is it possible for an open-loop system to be stable? What about for a closed-loop system to be unstable? Explain how or how not for each.\\
+
+It is possible for a closed loop system to be stable, if the quickest path to the output is also the only path there with no external inputs to the path. A closed loop system can become unstable if the feedback introduces a positive pole to the system.\\
+
+5. Leave any feedback on the clarity/usefulness of the purpose, deliverables, and expectations for this lab.\\
+
+A brief explanation about what open/closed loop systems are could help avoid my switch up in the future.
+
+\section{Conclusion}
+\ \ \ \ This lab was a nice way to introduce using block diagrams in a lab setting rather than just the diagram analysis we have been using in class so far. Learning all the new ways the python functions can be used to analyze and identify aspects of systems of equations as well as factored and expanded forms are a useful tool for the future. Overall this lab was a nice mix of python and math to show how they compliment each other.
+
+\end{document}

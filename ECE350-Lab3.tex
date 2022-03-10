@@ -1,0 +1,152 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 3                                                        %
+% February 1st, 2022                                           %
+% This lab is built around understanding graphical convolution %
+% by using python to create a function to solve for the        %
+% graphical convolution.                                       %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 2}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ The purpose of this lab was to better understand convolutions and their properties and to display them graphically using user defined python functions.
+
+\section{Equations}
+
+\begin{equation}
+f_1(t) = step(t-2)-step(t-9)
+\end{equation}
+\begin{equation}
+f_2(t) = e^{-t}*step(t)
+\end{equation}
+\begin{equation}
+f_3(t) = ramp(t-2)*(step(t-2)-step(t-3))+ramp(4-t)*(step(t-3)-step(t-4))
+\end{equation}
+
+\section{Methodology}
+\ \ \ \ I approached this lab by pulling a lot of my code previously done for lab 2. The step and ramp functions were just ripped from the previous lab, and I used the template of my f(t) function to create the f1, f2, and f3 functions for this lab. Once I had these done I went back to lab 1 to see how they did subplots and used their code to code my own. Once that was done I tried to start the convolution function, but got stuck on trying to get them to be the same length. I decided to skip that part and get the actual convolution math working. I watched some videos on graphical convolutions and get the general equation down for moving through the arrays and gathering all the information. I was stuck on the array size of the problem until you showed us your code, so I copied it down and analyzed to understand how it worked. Once I did, I retooled the x axis size for the plots and plotted the three functions and well as using the python convolutions for comparison, and once they were the same finished the lab.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+# f1 function
+def f1(t):
+    y = step(t-2)-step(t-9)
+    return y
+
+# f2 function
+def f2(t):
+    y = np.exp(-t)*step(t)
+    return y
+
+# f3 function
+def f3(t):
+    y = ramp(t-2)*(step(t-2)-step(t-3))+ramp(4-t)*(step(t-3)-step(t-4))
+    return y
+\end{lstlisting}
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=0.7]{Figure 2022-02-02 170847 (0).png}
+
+The three functions we have for this lab utilize the step and ramp functions in the previous lab to create these waveform. They follow the expected behavior, with the only step function being two steps, f2 decreasing exponentially starting at 1 (as anything to the power of 0 is 1), and the third function forming a point, as it was two ramp functions interacting. They all end by early, so these plots could be shrunk if the requirements did not specify 0 to 20.
+
+\subsection{Part 2}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+def func_conv(f1, f2):
+    nf1 = len(f1) # get length of incoming arrays
+    nf2 = len(f2)
+    f1ext = np.append(f1, np.zeros((1, nf2-1))) # increases size to f1 + f2
+    f2ext = np.append(f2, np.zeros((1, nf1-1)))
+    result = np.zeros(f1ext.shape) # get array size of dataset filled with 0
+    for i in range(nf2+nf1-2): 
+        result[i] = 0
+        for j in range(nf1):
+            if (i-j+1)>0:
+                try: 
+                    result[i] += f1ext[j]*f2ext[i-j+1] # preform convolution for all values in f2 on a point in f1
+                except:
+                    print(i, j) # print if error occurred
+    return result
+\end{lstlisting}
+
+\subsubsection{Task 2, 3, 4}
+
+\includegraphics[scale=0.7]{Figure 2022-02-02 170847 (1).png}
+
+\includegraphics[scale=0.7]{Figure 2022-02-02 170847 (2).png}
+
+The user created function and the built in function produce the same plots, leading me to call the lab a success. The behaviour of f1,f2 is as expected with the plot beginning at 2 with a steep slope, flattening out as we get to the lower values of f2, then sharply decline at 9 when f2 leaves f1. f2,f3 also behaves as expected, with a sharp increase at 2 for the beginning of f3 and then a similar decrease at 3. f1, f3 is simply f3 shifted to the right and extended to fit f1 and f3, along with a gradual slope to reflect the slope of f1.
+
+\section{Error Analysis}
+\ \ \ \ The biggest errors I had in this lab were trying to get the convolution function to work. Once the TA showed their work, I was able to write it down and find where my own errors in my code, as well as analyze theirs to better understand how we are finding graphical convolution. Once I had that, the biggest problem was setting up the x axis. The plot function kept telling me that the x and y values did not match> I had multiplied the x value by 2 to match the doubled y axis but I had to multiply the x + one step by 2, then add another one to match the new y axis. Once that was solved the rest of the lab was a breeze.
+
+\section{Questions}
+1. Did you work alone or with classmates on this lab? If you collaborated to get to the solution, what did that process look like?
+\\
+I worked alone to try and get my convolution code working, but got stuck while I was typing it. After watching some YouTube videos on what convolution means I got some code for adding all of the steps of graph 1 and multiplying it by the position of graph 2. The design process after that was taking your provided code and analyzing it to better understand how the convolution worked and fine tuning the inputs.
+\\
+2. What was the most difficult part of this lab for you, and what did your problem solving process look like?
+\\
+The most difficult part of this lab for me was figuring out how to deal with different length arrays of values for the arrays. Once I understood how the convolution functioned I began to try and work out how to work around the different sizes of arrays being dealt with. At first I would just run the code, and then read the error reports to see what syntactically was wrong. Then I added if print statements to tell me when something went wrong. When the TA showed us how we could back fill the arrays with 0 to get around the length, instead of being more precise in my filling, I was able to work around this fact and move on to better understand your code and how it worked with my problem.
+\\
+3. Did you approach writing the code with analytical or graphical convolution in mind? Why did you chose this approach?
+\\
+A approached coding this lab with a graphical convolution in mind. I am a more visual learner so understanding how the convolution worked visually was better for my wrapping my head around the problem.
+\\
+4. Leave any feedback on the clarity of lab tasks, expectations, and deliverable.
+\\
+The lab itself was clear, just difficult to understand. A bit more pseudo code or a step by step example for solving a graphical convolution would help boost this understanding considerably. Also, why have a plot from 0 to 20 when all the examples end by 10? Seems like wasted space and processing time.
+
+\section{Conclusion}
+\ \ \ \ For me, this labs biggest takeaway was better understanding the nature of graphical convolutions, as I am a more visual learner. getting to use more complex functions in python was nice too, and helped to push me away from thinking about everything in terms of C. The step size I chose was more than sufficient to get the graphical convolutions with smooth edges. I could have gone with a bigger step size as the current one caused the convolution function to lag and take a while to get the plots due to the amount of data it had to sift through. Overall, this lab was a nice learning experience for how convolutions work and working with more Python functions.
+
+\end{document}
