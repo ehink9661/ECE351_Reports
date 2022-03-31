@@ -1,0 +1,227 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 10                                                       %
+% March 29th, 2022                                             %
+% This lab deals with us using python to become familiar with  %
+% frequency response tools and using bodi plots, as well as    %
+% utilizing filters in our analysis.                           %
+%                                                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 10}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+\ \ \ \ This lab has us using python to become familiar with frequency response tools and using bodi plots, as well as transforming into the z domain for filter  analysis.   
+
+\section{Equations}
+
+$$H(s) = \frac{\frac{1}{RC}s}{s^2+\frac{1}{RC}s+\frac{1}{LC}}$$
+$$H(j\omega) = \frac{\frac{1}{RC}j\omega}{(j\omega)^2+\frac{1}{RC}j\omega+\frac{1}{LC}} = \frac{\frac{j\omega}{RC}}{\frac{j\omega}{RC}+\frac{1}{LC}-\omega^2}$$
+$$|H(j\omega)| = \frac{\frac{\omega}{RC}}{\sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}}$$
+$$\angle H(j\omega)=tan^{-1}(\frac{\omega}{RC/0})-tan^{-1}(\frac{\frac{\omega}{RC}}{\frac{1}{LC}-\omega^2}) = \frac{\pi}{2}-tan^{-1}(\frac{\frac{\omega}{RC}}{\frac{1}{LC}-\omega^2})$$
+
+\section{Methodology}
+
+\ \ \ \ To start this lab, I worked on analyzing the prelab. Once I had converted from the s domain to jw, I used the definitions of mag and phase to solve for their equations. I then constructed functions for the phase and magnitude to construct the  plots. Once I had the functions I constructed the bodi plots for the user made functions, the built in bodi functions, and the transfer function plots. I then created a function of the function provided for part 2 in the s domain, and ran it through a plot of the filter as well as the output of the filtered equation, completing the lab.
+
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+# part 1
+
+R = 1e3
+L = 27e-3
+C = 100e-9
+
+steps = 1e3
+xmin = 1e3
+xmax = 1e6
+w = np.arange(xmin, xmax + steps, steps)
+
+def hmag (w):
+    y = (w/(R*C)) / np.sqrt(w**4 + ((1/(R*C))**2 - 2/(L*C))*w**2 + (1/(L*C))**2)
+    y = 20*np.log10(y) # convert to dB
+    return y
+
+def hdeg (w):
+    y = np.pi/2 - np.arctan((w/(R*C))/((1/(L*C)-w**2)))
+    y = y*180/np.pi
+    return y
+
+# task 1
+
+y1 = hmag(w)
+
+plt.figure(figsize = (10, 7))
+plt.subplot (2,1,1)
+plt.semilogx(w, y1)
+plt.title('Part 1 - Task 1')
+plt.grid()
+plt.ylabel('|H| dB')
+
+y2 = hdeg(w)
+for i in range(len(y2)):
+    if y2[i] > 90:
+        y2[i] = y2[i] - 180 #  centers around 0
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-31 140735 (0).png}
+
+\ \ \ \ The bodi plots from my hand calculations appear to be valid, with an increase in magnitude until about 11000 before decreasing, which is what out original calculation seems to represent. The phase plot represents this trend as well, with the transition from an increase to decreasing magnitude happens with the change in phase angle.
+
+\subsubsection{Task 2}
+
+\begin{lstlisting}[language=Python]
+num = [1/(R*C), 0]
+den = [1, 1/(R*C), 1/(L*C)]
+
+w, mag, phase = scipy.signal.bode((num, den), w)
+
+plt.figure(figsize = (10, 7))
+plt.subplot (2,1,1)
+plt.semilogx(w, mag)    # Bode magnitude plot
+plt.title('Part 1 - Task 2')
+plt.grid()
+plt.ylabel('|H| dB')
+
+plt.subplot (2,1,2)
+plt.semilogx(w, phase)  # Bode phase plot
+plt.grid()
+plt.xlabel('rad/s')
+plt.ylabel('/_H dB')
+plt.show()
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-31 140735 (1).png}
+
+\ \ \ \ The python plots match my and calculations, showing that they are valid.
+
+\subsubsection{Task 3}
+
+\begin{lstlisting}[language=Python]
+sys = con.TransferFunction(num, den)
+_ = con.bode(sys , w , dB = True , Hz = True , deg = True , plot = True)
+\end{lstlisting}
+
+\includegraphics[scale=0.9]{Figure 2022-03-31 140735 (2).png}
+
+\ \ \ \ This plot matches the last two plots in shape, but the phase angle of off by a value of 360 degrees. However, this is still equivalent as we have now gone all the way around a circle.
+
+\subsection{Part 2}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+# task 1
+
+def x(t):
+    return np.cos(2*np.pi*100*t) + np.cos(2*np.pi*3024*t) + np.sin(2*np.pi*50000*t)
+
+fs = 2*np.pi*50000
+
+steps = 1/fs
+xmin = 0
+xmax = 1e-2
+t = np.arange(xmin, xmax + steps, steps)
+
+y = x(t)
+
+plt.figure(figsize = (10, 7))
+plt.plot(t, y)
+plt.title('Part 2 - Task 1')
+plt.grid()
+plt.ylabel('|H| dB')
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-31 140735 (3).png}
+
+\ \ \ \ This plot seems to mimic the two cosine plots and their smaller magnitudes, and the larger sine plot acting ass the overall function.
+
+\subsubsection{Task 4}
+
+\begin{lstlisting}[language=Python]
+# task 2
+
+numz, denz = scipy.signal.bilinear(num, den, fs)
+
+# task 3
+
+z = scipy.signal.lfilter(numz, denz, y)
+
+# task 4
+
+plt.figure(figsize = (10, 7))
+plt.plot(t, z)
+plt.title('Part 2 - Task 4')
+plt.grid()
+plt.ylabel('|H| dB')
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-31 140735 (4).png}
+
+\ \ \ \ This plot appears to be valid as a filter output, and was confirmed by the TA as valid.
+
+\section{Error Analysis}
+
+\ \ \ \ The biggest error I had in my plots came from my initial functions, where my use of powers instead of e made my plots come up at the wrong frequency, alternating between rising and falling phases very quickly. This seemed to be logically equivalent, but it caused many errors in my plots. Eventually the TA recommended I try using e instead, and that did the trick. I expect that the problem they caused came from typing, with e being a float and powers being ints, causing a rounding error in the functions.
+
+\section{Questions}
+
+1. Explain how the filter and filtered output in Part 2 makes sense given the Bode plots from Part 1. Discuss how the filter modifies specific frequency bands, in Hz.\\
+As the phase angle decreases and goes negative, the filter can bee seen decreasing before flipping and increasing when the phase angle reaches 0 and goes positive. The magnitude is seen by int increase in the speed of the descent as it gets closer to 0, and going at a slower rate near the edges.\\
+2. Discuss the purpose and workings of scipy.signal.bilinear() and scipy.signal.lfilter().\\
+Bilinear takes the poles of a function in the s domain and converts it into the x domain so that we are able to use it in lfilter. It returns the numerator and the denominator for the z function by substituting (z-1) / (z+1) for s. These values can then be applied to the filter, to filter our signal through the bodi plot from earlier and give us the filtered outputs by using the z domain.\\
+3. What happens if you use a different sampling frequency in scipy.signal.bilinear() than you used for the time-domain signal?\\
+If I decrease the sampling frequency for the function the output becomes more noisy, and harder to decipher. Increasing it makes the output more unstable and wavy, meaning the output is now less reliable. Keeping the sampling frequency the same avoids these discrepancies.\\
+4. Leave any feedback on the clarity of lab tasks, expectations, and deliverables.\\
+Having a note to use e instead of ** to do powers for the variables would be a nice reminder.
+
+\section{Conclusion}
+
+\ \ \ \ This lab was another look into how python can do what we do by hand much quicker and more accurately for data analysis. Seeing how we can use functions into the s domain can be used for our function analysis with jw was a nice look into how all these transformation and functions are connected and how we analyse them. Overall, this lab was a nice proof and lesson for how python improves our data analysis capabilities.
+
+\end{document}

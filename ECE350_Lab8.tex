@@ -1,0 +1,143 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 8                                                        %
+% March 8th, 2022                                              %
+% This lab deals with using python to solve fourier series     %
+% transformations and to find the approximate square wave      %
+% representation of a specific fourier series in the time      %
+% domain.                                                      %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 8}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\ \ \ \ This lab has us diving into using Fourier transformations to analyze and approximate periodic time-domain signals.
+\section{Equations}
+
+$$\omega_0 = \frac{2\pi}{T}$$
+$$a_k = \frac{2}{T} \int_{0}^{T/2} (1) * cos(k\omega_0t) \,dt = 0$$
+$$b_k = \frac{2}{T} \int_{0}^{T/2} (1) * sin(k\omega_0t) \,dt = \frac{2}{k\pi} * [1 - cos(k\pi)]$$
+$$x(t) =  \frac{2}{k\pi} * [1 - cos(k\pi)] * sin(k\omega_0t)$$
+
+\section{Methodology}
+\ \ \ \ For this project I approached it by first studying and completing the prelab. This proved to be difficult due to my unfamiliarity of working in the Fourier domain with functions. Once that was done I set about writing the functions ak and bk into Python once they were solved. Since ak was equal to 0 it was simple to implement, whereas bk was a bit more tricky. Then I created the function for the project we derived in the prelab and plotted the graph for different values of N where T = 8s. Once the plots were completed I checked to make sure they matched the expected behavior of the specified N value and completed the lab.
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+def ak(k):
+    a = 0*k
+    return a
+
+def bk(k):
+    if k == 0:
+        return math.inf # when k is 0, get und
+    b = 2/(k*np.pi)*(1-np.cos(k*np.pi))
+    return b
+
+print('a0 = ', ak(0))
+print('a1 = ', ak(1))
+print('b1 = ', bk(1))
+print('b2 = ', bk(2))
+print('b3 = ', bk(3))
+
+a0 =  0
+a1 =  0
+b1 =  1.2732395447351628
+b2 =  0.0
+b3 =  0.4244131815783876
+\end{lstlisting}
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=0.7]{Figure 2022-03-08 145219.png}
+
+\begin{lstlisting}[language=Python]
+T = 8
+
+def x(n, t):
+    x = np.zeros(t.shape)
+    for i in range(1, n+1):
+        x += bk(i)*np.sin(i*(2*math.pi/T)*t)
+    return x
+
+steps = 0.001
+xmin = 0.00
+xmax = 20.00
+t = np.arange(xmin, xmax + steps , steps)
+\end{lstlisting}
+
+\ \ \ \ The plots match what we would expect for the different N values. as N increases, we get a waveform closer to a square wave. The jumps on the edges of the waveform are a result of the signal needing to settle, and are an unavoidable result of the square wave.
+
+\section{Error Analysis}
+\ \ \ \ When coding I had to up my step size a few times to make sure I captured all the N values used in the final function. Originally I was not using the correct array to find the graphs, so had to go through and change them to be a np array to properly plot. I also added error handling to bk to make sure that 0 did not break the function via /0 errors.
+
+\section{Questions}
+
+1. Is x(t) an even or an odd function? Explain why.\\
+
+x(t) is an odd function, as the plot is not symmetrical across the x axis like a cosine function.\\
+
+2. Based on your results from Task 1, what do you expect the values of a2, a3, . . . , an to be? Why?\\
+
+I would expect their values to also be 0. This is because since the function is an odd function, all values found using the cosine in ak will result in 0, making all ak values 0.\\
+
+3. How does the approximation of the square wave change as the value of N increases? In what way does the Fourier series struggle to approximate the square wave?\\
+
+As the value of N increases, the approximation gets closer and closer to a square waveform. The Fourier series only struggles to approximate the square wave along the jump from negative to positive, where the residual waveform is still visible as a small spike before settling into a horizontal line for the square wave.\\
+
+4. What is occurring mathematically in the Fourier series summation as the value of N increases?\\
+
+The many different iterations of x(t) are being added together and slowly though their iterations come out to settle in a square wave. As N increases, x(t) slowly settles into the pattern of positive and negative humps similar to a sine wave, with period determined by T.\\
+
+5. Leave any feedback on the clarity of lab tasks, expectations, and deliverables.\\
+
+This lab was straightforward. All the trouble I had on it was self inflicted.
+
+\section{Conclusion}
+\ \ \ \ This lab was a nice explanation as to why square waves are the way they are and how python can be used to solve Fourier series. Seeing how square waves are affected by their values and the N values specifically was a nice visual aid to understanding. How even or odd function declarations can zero out certain functions was also a nice thing to learn. This lab was a nice learning experience.
+
+\end{document}

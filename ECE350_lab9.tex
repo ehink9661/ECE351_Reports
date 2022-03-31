@@ -1,0 +1,220 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 9                                                        %
+% March 22nd, 2022                                             %
+% This lab had us dealing with fast fourier transforms using   %
+% python. The lab consists of two functions, one for the fast  %
+% transformation and another that executes it cleanly.         %
+%                                                              % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 9}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+\ \ \ \ The purpose of this lab is to become more familiar with fast Fourier transforms using Python.
+
+\section{Equations}
+
+$$Equation 1: cos(2*pi*t)$$
+$$Equation 2: 5sin(2*pi*t)$$
+$$Equation 3: 2cos((2*pi*t)-2) + sin((2*pi*6t)+3)$$
+
+\section{Methodology}
+
+\ \ \ \ My methodology for this lab was to copy the code given to us and worked on editing the code to fulfill the needs of the lab. The first thing I did was add return types to the function to facilitate its use in the plots. I then created three functions for the three equations we needed to plot for the lab. I then gave it the proper time bounds and plotted the functions. Once I got to task four, I modified my fast fourier function to remove all values of a low magnitude, and repeated the process. To finish off the lab I plotted the square wave from lab 8 to see how the magnitude and phase behaved for the plot. Once all magnitude and phase plots were made I completed the lab.
+\section{Results}
+
+\subsection{Part 1}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+def usrfft(x, fs):
+    N = len(x) # find the length of the signal
+    X_fft = scipy.fftpack.fft(x) # perform the fast Fourier transform (fft)
+    X_fft_shifted = scipy.fftpack.fftshift(X_fft) # shift zero frequency components
+    # to the center of the spectrum
+    freq = np.arange(-N/2, N/2)*fs/N    # compute the frequencies for the output
+                                        # signal , (fs is the sampling frequency and
+                                        # needs to be defined previously in your code
+    X_mag = np.abs(X_fft_shifted)/N # compute the magnitudes of the signal
+    X_phi = np.angle(X_fft_shifted) # compute the phases of the signal
+    return freq, X_mag, X_phi
+    # ----- End of user defined function ----- #
+
+steps = 0.01
+xmin = 0.00
+xmax = 2.00
+t = np.arange(xmin, xmax, steps)
+
+def y1(t):
+    y = np.cos(2*np.pi*t)
+    return y
+
+x = y1(t)
+fs = 100
+freq, X_mag, X_phi = usrfft(x, fs)
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (0).png}
+
+\ \ \ \ This plot behaved as expected, as we were able to compare this plot to the TAs example to see if they were structured and outputting properly.
+
+\subsubsection{Task 2}
+
+\begin{lstlisting}[language=Python]
+def y2(t):
+    y = 5*np.sin(2*np.pi*t)
+    return y
+    
+x = y2(t)
+fs = 100
+freq, X_mag, X_phi = usrfft(x, fs)
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (1).png}
+
+\ \ \ \ This plot behaved as expected, with the cleaner, zoomed in plots giving us a better understanding of the behavior behind the design. The delta functions on the magnitude appear where we would expect them too appear.
+
+\subsubsection{Task 3}
+
+\begin{lstlisting}[language=Python]
+def y3(t):
+    y = 2*np.cos((2*np.pi*2*t)-2) + np.sin((2*np.pi*6*t)+3)
+    return y
+    
+x = y3(t)
+fs = 100
+freq, X_mag, X_phi = usrfft(x, fs)
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (2).png}
+
+\ \ \ \ This plot seems to behave as we would expect it to, with the zoomed in plots reflecting the expected behavior of the phase angle based on the behavior of the plot. The deltas of the function appear where we would expect them too, with four deltas on the magnitude as it is a mix of sine and cosine.
+
+\subsubsection{Task 4}
+
+\begin{lstlisting}[language=Python]
+def usrfftclean(x, fs):
+    N = len(x) # find the length of the signal
+    X_fft = scipy.fftpack.fft(x) # perform the fast Fourier transform (fft)
+    X_fft_shifted = scipy.fftpack.fftshift(X_fft) # shift zero frequency components
+    # to the center of the spectrum
+    freq = np.arange(-N/2, N/2)*fs/N    # compute the frequencies for the output
+                                        # signal , (fs is the sampling frequency and
+                                        # needs to be defined previously in your code
+    X_mag = np.abs(X_fft_shifted)/N # compute the magnitudes of the signal
+    X_phi = np.angle(X_fft_shifted) # compute the phases of the signal
+    for i in range(0, len(X_mag)):
+        if(X_mag[i] < np.exp(-10)):
+            X_phi[i] = 0
+    return freq, X_mag, X_phi
+    # ----- End of user defined function ----- #
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (3).png}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (4).png}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (5).png}
+
+\ \ \ \ With the cleaning op of the plots, we can better see how the behavior is supposed to be fore these plots, and can confirm that they are behaving as expected.
+
+\subsubsection{Task 5}
+
+\begin{lstlisting}[language=Python]
+T = 8
+
+def bk(k):
+    if k == 0:
+        return math.inf # when k is 0, get und
+    b = 2/(k*np.pi)*(1-np.cos(k*np.pi))
+    return b
+
+def x(n, t):
+    x = np.zeros(t.shape)
+    for i in range(1, n+1):
+        x += bk(i)*np.sin(i*(2*np.pi/T)*t)
+    return x
+
+steps = 0.01
+xmin = 0.00
+xmax = 16.00
+t = np.arange(xmin, xmax, steps)
+
+x = x(15, t)
+fs = 100
+freq, X_mag, X_phi = usrfftclean(x, fs)
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-03-22 145640 (6).png}
+
+\ \ \ \ For plot 5, the x(t) is the same as the one we received in lab 8. The magnitude and phase behavior is also what we would expect, with the magnitude begin reflected around x = 0, with the phase being reversed to reflect the negative side of the square wave.
+
+\section{Error Analysis}
+
+\ \ \ \ My biggest error came from my plot beginning shifted slightly to the left on all my plots. This took me a while to figure out, as I thought it was a result of me capturing my intervals at a wrong interval. The TA eventually pointed out that for these type of plots, the steps do not add one more to the end, and only go up to the max x value, not xmax + 1. Getting the plots set up correctly was tricky, but was eventually overcome for the lab.
+
+\section{Questions}
+
+1. What happens if fs is lower? If it is higher? fs in your report must span a few orders of magnitude.\\
+
+Higher fs is smaller step size, while a smaller fs results in a bigger step size. The fs is the sample rate, which acts as the inverse of the step size. A higher fs will then result in a more accurate plot.\\
+
+2. What difference does eliminating the small phase magnitudes make?\\
+
+Eliminating the small phase magnitudes reduces the noise of the overall system, resulting in a cleaner plot and output.\\
+
+3. Verify your results from Tasks 1 and 2 using the Fourier transforms of cosine and sine. Explain why your results are correct. You will need the transforms in terms of Hz, not rad/s. For example, the Fourier transform of cosine (in Hz) is: F{cos(2pif0t)}= 1/2*[d(f-f0) + d(f+f0)]\\
+
+My results are correct when comparing it to the results gained from my plots. For my cosine function with removed noise, the magnitude matches and we can see that the delta functions we can see are at 1 and -1, which is correct for cosine as the value of f0 in task 1 is 1. For the sine value, the same can be seen, with a magnitude of 5 and delta functions at -1 and 1 for f0 of 1.\\
+
+4. Leave any feedback on the clarity of lab tasks, expectations, and deliverables.\\
+
+This lab was clear, but a better explanation on how to correctly create and do the plots as required by the lab would be helpful.
+
+\section{Conclusion}
+
+\ \ \ \ This lab was a nice introduction to a new way to analyze and find out the phase and magnitudes of fourier transformations using python. The code for the lab had most of the heavy lifting done by the lab itself, but required us to think critically of how we needed the code to function to achieve our aims for the lab. the creation of the clean function helped to better understand the plots as well as give us a visual representation as to why we need to weed out noise in our system for usability. Overall this lab was a nice learning experience for using python for fast fourier transformations.
+
+\end{document}
