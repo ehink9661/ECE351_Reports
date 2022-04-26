@@ -1,0 +1,303 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                              %
+% Ethan Hinkle                                                 %
+% ECE 351-51                                                   %
+% Lab 12                                                       %
+% April 12th, 2022                                             %
+% This lab is our final project for ECE 351. It is based       %
+% around using the python plotting skills to aid in creating   %
+% a filter for a theoretical aircraft positioning control      %
+% system.                                                      %
+%                                                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+backgroundcolor=\color{backcolour},
+commentstyle=\color{codegreen},
+keywordstyle=\color{codeblue},
+numberstyle=\tiny\color{codegray},
+stringstyle=\color{codegreen},
+basicstyle=\ttfamily\footnotesize,
+breakatwhitespace=false,
+breaklines=true,
+captionpos=b,
+keepspaces=true,
+numbers=left,
+numbersep=5pt,
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+tabsize=2
+}
+\lstset{style=mystyle}
+\title{ECE 351 - Lab 12}
+\author{Ethan Hinkle}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+\ \ \ \ This lab acts as our final project, where we must create and design a filter for a positioning system on an aircraft. The noise present on a sensor signal is degrading the positioning systems ability to function, so the goal for this lab is to create a filter using our python and design knowledge to create a filter to teh signals specifications.
+
+\section{Equations}
+
+$$H(s) = \frac{\frac{1}{RC}s}{s^2+\frac{1}{RC}s+\frac{1}{LC}}$$
+$$H(j\omega) = \frac{\frac{1}{RC}j\omega}{(j\omega)^2+\frac{1}{RC}j\omega+\frac{1}{LC}} = \frac{\frac{j\omega}{RC}}{\frac{j\omega}{RC}+\frac{1}{LC}-\omega^2}$$
+$$|H(j\omega)| = \frac{\frac{\omega}{RC}}{\sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}}$$
+$$20log_{10}|H(j\omega)| = dB$$
+$$\beta = \omega_{c2} - \omega_{c1}$$
+$$\omega_0 = \frac{\omega_{c1} + \omega_{c2}}{2}$$
+$$\beta = \frac{0.262}{RC}$$
+$$\omega_0 = \frac{1}{\sqrt{LC}}$$
+
+\section{Methodology}
+
+\ \ \ \ My methodology for this lab was to derive the proper equations and solve for the components mathematically, instead of guessing and shifting components around. The first thing I did for this lab was to create the noisy signal from the input data so I could get an idea of what I was working with. Using the make\_stem function provided for this lab as well as the clean fast fourier transform we created for lab 9, I ran the noisy signal at a fs of 1,000,000 to get my magnitude and phase plots of the input signals. There are four ranges of interest we needed to focus on for this lab, $f < 1.8kHz, 1.8kHz <= f <= 2.0kHz, 2.0kHz < f <= 100.0kHz, f > 100.0kHz$. We only want signals coming in from the 1.8kHz to 2.0kHz range, but there are multiple signals outside this range on the magnitude plot that must be removed.
+
+\ \ \ \ With these plots, I began to solve for the necessary components for the requested filter. Using the filter equations from lab 10, as well as knowledge from prior classes, I was able to determine several values for the filter. The cutoff frequencies for the filter are 1.8kHz and 2.0kHz, with the difference between them being the bandwidth of $\beta = 200Hz$. The midpoint between these cutoff frequencies is also the midpoint frequency of the filter of $\omega_0 = 1.9kHz$. I decided to use a RCL bandpass filter for this project, as it both allowed me to filter the proper frequencies, and allowed me to reuse the equations I derived for lab 10.
+
+\ \ \ \ In the tasks laid out for this lab, the position measurement must be attenuated by less than -0.3dB. This rules out using the already known equations $\beta = \frac{1}{RC}$ and $\omega_0 = \frac{1}{\sqrt{LC}}$, as this is only attenuated to -3dB. When I tried to solve using this equation, I got too high of an attenuation, so I set out to solve for my own bandpass equation for my wanted attenuation using the lab 10 magnitude equation $|H(j\omega)| = \frac{\frac{\omega}{RC}}{\sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}}$. Starting with the attenuation, I solved for the wanted magnitude via $20log_{10}|H(j\omega)| = -0.3dB$, getting $|H(j\omega)| = 0.967$. This gives us to plug in the magnitude for our equation $0.967 = \frac{\frac{\omega}{RC}}{\sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}}$. Solving, I got $1.034\frac{\omega}{RC} = \sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}$ which simplifies down to $0.069(\frac{\omega}{RC})^2 = (\frac{1}{LC}-\omega^2)^2$ and then $0 = \omega^2 + 0.262\frac{\omega}{RC} - \frac{1}{LC}$. Using the quadratic formula now, we get $\omega = \frac{\frac{0.262}{RC} \mp \sqrt{(\frac{0.262}{RC})^2 - \frac{4}{LC}}}{2}$ for the cutoff frequencies for -0.3dB attenuation, giving me the bandpass equation of $\beta = \frac{0.262}{RC}$. This gave me R and C, but not L. To get the equation for solving L, I decided to solve the magnitude equation at the midpoint, as the known equation $\omega_0 = \frac{1}{\sqrt{LC}}$ contains L. At the midpoint frequency, we can assume 0dB, so $20log_{10}|H(j\omega)| = 0dB$, which gives $|H(j\omega)| = 1$. Solving $1 = \frac{\frac{\omega}{RC}}{\sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}}$ I got $\frac{\omega}{RC} = \sqrt{(\frac{1}{LC}-\omega^2)^2+(\frac{\omega}{RC})^2}$ which simplifies down to $0 = \frac{1}{LC}-\omega^2$, giving me a midpoint frequency equation of $\omega_0 = \frac{1}{\sqrt{LC}}$, the same as the original equation I had since both equations had 0dB attenuation at the midpoint.
+
+\ \ \ \ Using these two equations< I solved for my remaining components, using my known bandwidth and midpoint values. I elected to solve using a constant resistor value of $100 \Omega$ and solved for my capacitor C using $200*2*\pi = \frac{0.262}{100*C}$ for $C = 2.085 \mu F$, the $2\pi$ being necessary to get my frequency in radians for the equations. Then, using my midpoint equation solved for my inductor L using $1900*2*\pi = \frac{1}{\sqrt{L*2.085*10^{-6}}}$ for $3.37 mH$.
+
+\ \ \ \ Using these component values, I created my bode plot of the circuit to see if I satisfied all the requirements. Once this was confirmed, and proper adjustments made to the values, I filtered the signal using the scipy.signal.bilinear() function to get my filter in the z domain and scipy.signal.lfilter() to run the noisy signal through my filter similar to lab 10. Once I had filtered the signal, I ran the signal through the clean fft function and checked the magnitude at the desired frequencies to see if the filter was working properly. When I had confirmed that it was I checked all the other frequency ranges to make sure no unwanted magnitudes were there and called the project complete.
+
+
+\section{Results}
+
+\subsubsection{Task 1}
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.signal
+import scipy.fftpack  
+import pandas as pd
+import control as con
+
+# load input signal
+df = pd.read_csv('NoisySignal.csv')
+
+t = df['0']. values
+sensor_sig = df['1']. values
+
+plt.figure(figsize = (10, 7))
+plt.plot(t, sensor_sig)
+plt.grid()
+plt.title('Noisy Input Signal')
+plt.xlabel('Time [s]')
+plt.ylabel('Amplitude [V]')
+plt.show()
+
+# your code starts here , good luck
+
+# task 1 use lab 8 and 9 for fast fourier transfomrs
+
+def usrfftclean(x, fs):
+    N = len(x) # find the length of the signal
+    X_fft = scipy.fftpack.fft(x) # perform the fast Fourier transform (fft)
+    X_fft_shifted = scipy.fftpack.fftshift(X_fft) # shift zero frequency components
+    # to the center of the spectrum
+    freq = np.arange(-N/2, N/2)*fs/N    # compute the frequencies for the output
+                                        # signal , (fs is the sampling frequency and
+                                        # needs to be defined previously in your code
+    X_mag = np.abs(X_fft_shifted)/N # compute the magnitudes of the signal
+    X_phi = np.angle(X_fft_shifted) # compute the phases of the signal
+    for i in range(0, len(X_mag)):
+        if(X_mag[i] < np.exp(-10)):
+            X_phi[i] = 0
+    return freq, X_mag, X_phi
+    # ----- End of user defined function ----- #
+    
+fs = 1e6
+
+def make_stem(ax ,x,y,color='k',style='solid',label='',linewidths =2.5 ,** kwargs):
+    ax.axhline(x[0],x[-1],0, color='r')
+    ax.vlines(x, 0 ,y, color=color , linestyles=style , label=label , linewidths=linewidths)
+    ax.set_ylim ([1.05*y.min(), 1.05*y.max()])
+
+    
+
+freq, X_mag, X_phi = usrfftclean(sensor_sig, fs)
+
+fig , ax = plt.subplots(figsize =(10, 7))
+make_stem(ax, freq, X_mag)
+plt.xlim(0, 2e5)
+plt.grid()
+plt.title('Magnitude of Noisy Signal')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Magnitude [V]')
+plt.show()
+
+fig , ax = plt.subplots(figsize =(10, 7))
+make_stem(ax, freq, X_phi)
+plt.xlim(0, 2e5)
+plt.grid()
+plt.title('Phase of Noisy Signal')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Phase [deg]')
+plt.show()
+\end{lstlisting}
+
+\ \ \ \ This code was used to create the signal and magnitude plots for analysis so that I could work to build my filter for the project.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (0).png}
+
+\ \ \ \ The noisy plot is hard to decipher due to the noise, so it will be a good benchmark for if the filter is working.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (1).png}
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (2).png}
+
+\ \ \ \ These plots are based off of the signal data, and were used for comparison to figure out if the filter design was working. The phase angle plot was not necessary for this lab, but is shown for context.
+
+\subsubsection{Task 2}
+
+\includegraphics[scale=1.0]{Lab 12 RLC Bandpass.PNG}
+$$R = 100\Omega|| L = 3.37 mH||C = 2.085 \mu F $$
+
+\ \ \ \ I elected to use a 100 ohm resistor as my starting element, then solved for the other elements using the equations I derived.
+
+\subsubsection{Task 3}
+
+\begin{lstlisting}[language=Python]
+R = 1e2
+L = 3.37e-3
+C = 2.085e-6
+
+steps = 1e1
+xmin = 1e1
+xmax = 2e6
+w = np.arange(xmin, xmax + steps, steps)
+
+num = [0, 1/(R*C), 0]
+den = [1, 1/(R*C), 1/(L*C)]
+
+w, mag, phase = scipy.signal.bode((num, den), w)
+
+sys = con.TransferFunction(num, den)
+_ = con.bode(sys , w , dB = True , Hz = True , deg = True , plot = True)
+plt.show()
+\end{lstlisting}
+
+\ \ \ \ The code used to create the bode plot for the filter.
+
+\includegraphics[scale=1.0]{Figure 2022-04-24 174841 (3).png}
+
+\ \ \ \ The full bode plot for my filter appears to fit all the requirements. The peak of the magnitude appears at 1900 Hz, decreasing on either side to filter out the noise. The phase plot also follows this pattern, with the angle being 0 at 1900 Hz and quickly decreasing to filter the unwanted noise. The filter goes to ~300kHz to show all parameters are met.
+
+\includegraphics[scale=1.0]{Figure 2022-04-24 174841 (4).png}
+
+\ \ \ \ From 10 Hz to 1.8kHz, the bode plot slowly increases to -0.3dB. This part of the bode plot must be attenuated by at least -30 dB to meet the requirements. The low frequencies meet this attenuation at ~150 Hz, so I can say that this filter meets the attenuation requirements for these frequencies.
+
+\includegraphics[scale=1.0]{Figure 2022-04-24 174841 (5).png}
+
+\ \ \ \ From 1.8kHz to 2.0kHz, the bode plot slowly increases to 0dB before decreasing back to -0.3dB. This part of the bode plot must be attenuated by -0.3dB to measure the right frequencies. The corner frequencies on either side of the diagram show that we have exactly -0.3dB attenuation at these frequency values, fulfilling the requirements.
+
+\includegraphics[scale=1.0]{Figure 2022-04-24 174841 (6).png}
+
+\ \ \ \ From 2kHz to 100kHz, the bode plot decreases from -0.3dB. This part of the bode plot must be attenuated by at least -21dB to meet the requirements of this lab. From the bode plot, we can see that the filter hits -21dB at 11kHz, meeting the requirements for the filter set by the project.
+
+\includegraphics[scale=1.0]{Figure 2022-04-24 174841 (7).png}
+
+\ \ \ \ Beyond 100kHz, we see little change in the magnitude or phase. For now we can assume that they are sully attenuated, and check if they meet the magnitude voltage requirements for the filtered signal.
+
+\subsubsection{Task 4}
+
+\begin{lstlisting}[language=Python]
+numz, denz = scipy.signal.bilinear(num, den, fs)
+
+z = scipy.signal.lfilter(numz, denz, sensor_sig)
+
+plt.figure(figsize = (10, 7))
+plt.plot(t, z)
+plt.grid()
+plt.title('Filtered Input Signal')
+plt.xlabel('Time [s]')
+plt.ylabel('Amplitude [V]')
+plt.show()
+
+freq, X_mag, X_phi = usrfftclean(z, fs)
+
+fig , ax = plt.subplots(figsize =(10, 7))
+make_stem(ax, freq, X_mag)
+plt.xlim(0, 2e5)
+plt.grid()
+plt.title('Magnitude of Noisy Signal')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Magnitude [V]')
+plt.show()
+
+fig , ax = plt.subplots(figsize =(10, 7))
+make_stem(ax, freq, X_phi)
+plt.xlim(0, 2e5)
+plt.grid()
+plt.title('Phase of Noisy Signal')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Phase [deg]')
+plt.show()
+\end{lstlisting}
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (8).png}
+
+\ \ \ \ The filtered signal is much clearer than our initial signal, signaling that the filter has in clearing up our input.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (9).png}
+
+\ \ \ \ The full magnitude plot has cleared up, showing us that the filter has worked at removing unwanted signals from our input.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (10).png}
+
+\ \ \ \ The phase plot has become more steady, seeming to signal that the filter has worked at removing unwanted signals in the higher frequency ranges.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (11).png}
+
+\ \ \ \ As frequency increases from 0 to 1800 Hz, we can see the lower frequency signals are filtered out due to their low magnitudes (the plot is scaled sown to better see the values). These magnitudes slowly increase as the frequency approaches our filtered range for signals.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (12).png}
+
+\ \ \ \ In the measured range of values, we can see that the proper input values are coming through, with their magnitudes being much larger than those above or below the range of frequencies.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (13).png}
+
+\ \ \ \ From 2kHz to 100kHz, the magnitudes drop off dramatically, quickly falling below 0.05V in magnitude, with only a few spikes around where the original magnitude plot had spikes in the magnitude plot before filtering. These spikes are however kept below 0.05V, so can be considered attenuated.
+
+\includegraphics[scale=0.6]{Figure 2022-04-24 174841 (14).png}
+
+\ \ \ \ For all frequencies beyond 100kHz, there is very little activity, with all magnitudes kept below 0.05V, completely attenuating the signals according to this project.
+
+
+\section{Error Analysis}
+
+\ \ \ \ The biggest error I had in this lab by far was dealing with domain changes. Originally I did all my math in radians instead of Hz to create the equations I would use to find my signals. When I had finally finished creating the equations for the -0.3dB attenuation and picked out my starting component, I couldn't get the desired bode plot. Rerunning my numbers showed that I had done the math correctly, but it was still off. It took me a while of looking before I realized that I was operating in the wrong domain. When I converted the frequencies into radians, the components now produced the desired bode plot
+
+\section{Questions}
+
+1. Earlier this semester, you were asked what you personally wanted to get out of taking this course. Do you feel like that personal goal was met? Why or why not?\\
+Going into this class I wanted to improve my python coding skills to better code and analyze data. I do feel that this was the case in this lab. I feel that I better understand how python can be achieved using pythons libraries as well as my own skills from other classes (such as the filter design here).\\
+2. Please fill out the course feedback survey, I will read every word and very much appreciate the feedback.\\
+Can do!\\
+3. Good luck in the rest of your education and career!\\
+Good luck on your studies as well!\\
+
+
+\section{Conclusion}
+
+\ \ \ \ This final project for signals and systems was a large undertaking compared to previous labs. The lack of direction was a blessing and a curse for this project. It allowed us to explore the solution in many different ways and come to our own component values but the lack of direction also had the problem of muddling up what deliverables are needed or problems in creating the filter regarding to attenuating the components. This difficulty is part of the point though, as this lab is meant to train us to deal with problems we may need to solve in careers and solve with little direction. Overall this final project was a nice applications project that we could be reasonably expected to perform in our careers, and highlighted the need for us to think creatively with the tools we have been learning with all year.
+
+\end{document}
